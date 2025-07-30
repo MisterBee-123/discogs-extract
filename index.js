@@ -135,6 +135,15 @@ function getDiscogsData(trackCounter) {
 }
 
 console.log('Extension is starting!');
+
+chrome.storage.local.get('trackInfo', function(result) {
+	var trackInfo = result.trackInfo;
+	console.log(trackInfo);
+	if (trackInfo !== undefined) {
+		document.getElementById('trackInfo').value = trackInfo;
+	}
+});
+	
 chrome.storage.local.get('setlist', function(result) {
 	var setlist = result.setlist;
 	console.log(setlist);
