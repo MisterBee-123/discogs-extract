@@ -17,6 +17,7 @@ async function returnTrackInfo() {
 		.then(injectionResult => {
 			for (const {frameId, result} of injectionResult) {
 				document.getElementById('trackInfo').value = result;
+				writeTrackInfoToStorage();
 			}
     	});
     }
@@ -30,6 +31,14 @@ async function addToSetlist() {
 		document.getElementById('setlist').value = setlist;
 		writePlaylistToStorage();
 	}
+}
+
+async function writeTrackInfoToStorage() {
+	
+	var trackInfo = document.getElementById('trackInfo').value;
+	chrome.storage.local.set({ "trackInfo": trackInfo }).then(() => {
+		console.log("Updated track info in local storage!");
+	});
 }
 
 async function clearSetlist() {
@@ -126,6 +135,15 @@ function getDiscogsData(trackCounter) {
 }
 
 console.log('Extension is starting!');
+
+chrome.storage.local.get('trackInfo', function(result) {
+	var trackInfo = result.trackInfo;
+	console.log(trackInfo);
+	if (trackInfo !== undefined) {
+		document.getElementById('trackInfo').value = trackInfo;
+	}
+});
+	
 chrome.storage.local.get('setlist', function(result) {
 	var setlist = result.setlist;
 	console.log(setlist);
@@ -137,4 +155,5 @@ chrome.storage.local.get('setlist', function(result) {
 document.getElementById('getTrackInfo').addEventListener('click', returnTrackInfo);
 document.getElementById('addToSetlist').addEventListener('click', addToSetlist);
 document.getElementById('clearSetlist').addEventListener('click', clearSetlist);
+document.getElementById('trackInfo').addEventListener('change', writeTrackInfoToStorage);
 document.getElementById('setlist').addEventListener('change', writePlaylistToStorage);
