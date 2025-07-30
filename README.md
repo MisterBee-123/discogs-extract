@@ -12,5 +12,5 @@ Discogs Track Extract requires Google Chrome to use. To install it, locate it in
 4. The track information is displayed in the Information field. Edit the text as desired. This text can be copied and pasted into a text file that OBS or a comparable streaming application can display.
 5. If you want to build a setlist, click on the "Add track to setlist" button. The artist and track name are added to the Setlist field at the end. Edit the setlist text as desired.
 6. Navigate to a different release page. The extension window closes once you click away from it.
-7. Click on the Discogs Track Extract icon again. Note that the Information field is now empty, but the Setlist field is still populated with the previous track.
+7. Click on the Discogs Track Extract icon again. Note that the Information field contains the previous track information, and the Setlist field is still populated.
 8. Repeat with multiple tracks, extracting information for each track and adding them to the setlist.
