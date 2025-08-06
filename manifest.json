@@ -17,8 +17,5 @@
   "permissions": [
   	"scripting",
   	"storage"
-  	],
-  "host_permissions": [
-  	"https://www.discogs.com/release/*"
   	]
 }
