@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Discogs Track Extract",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "Extracts track data from Discogs for use in streaming apps such as OBS.",
   "icons": {
     "48": "images/icon-48.png",
@@ -16,9 +16,11 @@
     },
   "permissions": [
   	"scripting",
-  	"storage"
+  	"storage",
+  	"tabs"
   	],
   "host_permissions": [
-  	"https://www.discogs.com/release/*"
+  	"https://www.discogs.com/*",
+  	"https://*.bandcamp.com/*"
   	]
 }
