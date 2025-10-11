@@ -16,8 +16,7 @@
     },
   "permissions": [
   	"scripting",
-  	"storage",
-  	"tabs"
+  	"storage"
   	],
   "host_permissions": [
   	"https://www.discogs.com/*",
