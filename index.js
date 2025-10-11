@@ -11,7 +11,7 @@ async function returnTrackInfo() {
 		chrome.scripting
 		.executeScript({
 			target: { tabId: tab.id },
-			func: getDiscogsData,
+			func: getReleaseData,
 			args: [trackId]
 		})
 		.then(injectionResult => {
@@ -59,10 +59,10 @@ async function writePlaylistToStorage() {
 	});
 }
 
-function getDiscogsData(trackCounter) {
+function getReleaseData(trackCounter) {
 
 	class ReleaseDataDiscogs {
-	
+
 		constructor(url, trackCounter) {
 			this.url = url;
 			this.trackCounter = trackCounter;
@@ -72,20 +72,6 @@ function getDiscogsData(trackCounter) {
 			this.year = getDiscogsYear();
 			this.trackName = getDiscogsTrackName(this.trackCounter, this.artist);
 			this.trackArtist = getDiscogsTrackArtist(this.trackCounter, this.artist);
-		}
-	}
-
-	class ReleaseDataBandcamp {
-	
-		constructor(url, trackCounter) {
-			this.url = url;
-			this.trackCounter = trackCounter;
-			this.artist = getBandcampArtist();
-			this.album = getBandcampAlbum();
-			this.label = getBandcampLabel();
-			this.year = getBandcampYear();
-			this.trackName = getBandcampTrackName(this.trackCounter, this.artist);
-			this.trackArtist = getBandcampTrackArtist(this.trackCounter, this.artist);
 		}
 	}
 
@@ -222,6 +208,20 @@ function getDiscogsData(trackCounter) {
 		return releaseYear;
 	}
 
+	class ReleaseDataBandcamp {
+
+		constructor(url, trackCounter) {
+			this.url = url;
+			this.trackCounter = trackCounter;
+			this.artist = getBandcampArtist();
+			this.album = getBandcampAlbum();
+			this.label = getBandcampLabel();
+			this.year = getBandcampYear();
+			this.trackName = getBandcampTrackName(this.trackCounter, this.artist);
+			this.trackArtist = getBandcampTrackArtist(this.trackCounter, this.artist);
+		}
+	}
+
 	function getBandcampArtist() {
 
 		var artistAlbum = document.querySelector("meta[name='title']").getAttribute("content");
@@ -231,7 +231,6 @@ function getDiscogsData(trackCounter) {
 
 	function getBandcampTrackName(trackCounter, artist) {
 
-		console.error(trackCounter + ' | ' + artist);
 		var pageType = document.querySelector("meta[property='og:type']").getAttribute("content");
 		if (pageType == 'album') {
 			let trackTable = document.getElementById('track_table');
@@ -298,16 +297,6 @@ function getDiscogsData(trackCounter) {
 			label = moreFrom.innerText.split('more from\n')[1];
 		}
 		return label;
-	}
-
-	function getTrackName(trackCounter, artist) {
-
-		if (window.location.hostname == 'www.discogs.com') { 
-			return getDiscogsTrackName(trackCounter, artist);
-		}	
-		if (window.location.hostname.includes('bandcamp.com')) { 
-			return getBandcampTrackName(trackCounter, artist);
-		}	
 	}
 
 	if ((window.location.hostname == 'www.discogs.com')&&(!window.location.pathname.includes('release'))) {
