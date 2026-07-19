@@ -5,19 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <style>
-	    h1 {text-align: center;}
+	    h1 { text-align: center; color: orange }
+	    h2 { text-align: left; color: orange }
+	    textarea { border-style: double; border-width: 5px; border-color: green; border-radius: 10px }
+	    button { font-family: Verdana; border-style: outset; border-width: 5px; border-color: orange; border-radius: 10px }
 	</style>
     <title>Discogs / Bandcamp Track Extract</title>
   </head>
-  <body>
+  <body style="background-color: black; border-style: ridge; border-radius: 10px">
+  	<script type="module" src="index.js"></script>
   	<h1>Discogs / Bandcamp Track Extract</h1>
   	<textarea id="trackID" name="trackID" rows="1" cols="5">1</textarea>
   	<button id="getTrackInfo">Return track info</button>
-  	<textarea id="trackInfo" name="trackInfo" rows="5" cols="40"></textarea>
-  	<button id="addToSetlist">Add track to setlist</button>
-  	<button id="clearSetlist">Clear setlist</button>
+  	<center>
+  		<textarea id="trackInfo" name="trackInfo" rows="5" cols="60"></textarea>
+  		<img id="coverArt" src="./images/icon-128.png" height=200 width=200 style="border-color: orange">
+  	</center>
+  	<center>
+  		<button id="addToSetlist">Add track to setlist</button>
+  		<button id="clearSetlist">Clear setlist</button>
+  		<button id="deleteLast">Delete last entry</button>
+  	</center>
   	<h2>Setlist:</h2>
-  	<textarea id="setlist" name="setlist" rows="20" cols="40"></textarea>
-  	<script src="index.js"></script>
+  	<textarea id="setlist" name="setlist" rows="20" cols="60"></textarea>
+  	<textarea id="coverArtHtml" name="coverArtHtml" rows="5" cols="60"></textarea>
+  	<button id="compileHtml">Compile Cover Art HTML</button>
   </body>
 </html>

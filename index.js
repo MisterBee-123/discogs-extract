@@ -16,7 +16,10 @@ async function returnTrackInfo() {
 		})
 		.then(injectionResult => {
 			for (const {frameId, result} of injectionResult) {
-				document.getElementById('trackInfo').value = result;
+				var resultArray = result.split('\n');
+				var trackInfo = resultArray[0] + '\n' + resultArray[1] + '\n' + resultArray[2] + '\n' + resultArray[3] + '\n' + resultArray[4];
+				document.getElementById('trackInfo').value = trackInfo;
+				document.getElementById('coverArt').src = resultArray[5];
 				writeTrackInfoToStorage();
 			}
 		})
@@ -34,7 +37,10 @@ async function addToSetlist() {
 		var setlist = document.getElementById('setlist').value + trackInfo.split('\n')[0] + ': ' + trackInfo.split('\n')[1] + '\n';
 		document.getElementById('setlist').value = setlist;
 		writePlaylistToStorage();
-	}
+		var currentCoverArtURL = document.getElementById('coverArt').src;
+		console.log('URL:' + currentCoverArtURL);
+		writeCoverArtToStorage();
+	}	
 }
 
 async function writeTrackInfoToStorage() {
@@ -43,12 +49,35 @@ async function writeTrackInfoToStorage() {
 	chrome.storage.local.set({ "trackInfo": trackInfo }).then(() => {
 		console.log("Updated track info in local storage!");
 	});
+
+	var coverArt = document.getElementById('coverArt').src
+	chrome.storage.local.set({ "coverArt": coverArt }).then(() => {
+		console.log("Updated cover art in local storage!");
+	});
+}
+
+async function writeCoverArtToStorage() {
+	
+	var coverArt = document.getElementById('coverArt').src
+	var coverArtInfo = [];
+	chrome.storage.local.get('coverArtList', function(result) {
+		var coverArtList = result.coverArtList;
+		if (coverArtList !== undefined) {
+			coverArtInfo = coverArtList.split('^');
+		}
+		coverArtInfo[coverArtInfo.length] = coverArt;
+		coverArtList = coverArtInfo.join('^');
+		chrome.storage.local.set({ "coverArtList": coverArtList }).then(() => {
+			console.log("Updated cover art list in local storage!");
+		});
+	});
 }
 
 async function clearSetlist() {
 	
 	document.getElementById('setlist').value = null;
 	chrome.storage.local.remove( "setlist" );
+	chrome.storage.local.remove( "coverArtList" );
 }
 
 async function writePlaylistToStorage() {
@@ -57,6 +86,81 @@ async function writePlaylistToStorage() {
 	chrome.storage.local.set({ "setlist": setlist }).then(() => {
 		console.log("Updated setlist in local storage!");
 	});
+}
+
+async function deleteLastEntry() {
+
+	const setlistResult = await chrome.storage.local.get(['setlist']);	
+	if (setlistResult.setlist) {
+		var setlist = setlistResult.setlist;
+		var setlistItems = setlist.split('\n');
+		if (setlistItems.length > 0) {
+			const newSetlistItems = setlistItems.slice(0, -2);
+			setlist = newSetlistItems.join('\n') + '\n';
+		}
+		chrome.storage.local.set({ "setlist": setlist }).then(() => {
+			console.log("Updated setlist in local storage!");
+		});
+		document.getElementById('setlist').value = setlist;
+	}
+
+	const coverArtListResult = await chrome.storage.local.get(['coverArtList']);	
+	if (coverArtListResult.coverArtList) {
+		var coverArtList = coverArtListResult.coverArtList;
+		let coverArtInfo = coverArtList.split('^');
+		if (coverArtInfo.length > 0) {
+			const newCoverArtInfo = coverArtInfo.slice(0, -1);
+			coverArtList = newCoverArtInfo.join('^');
+		}
+		chrome.storage.local.set({ "coverArtList": coverArtList }).then(() => {
+			console.log("Updated cover art list in local storage!");
+		});
+	}
+}
+
+async function getCoverArtTable() {
+
+	function calcHeight(totalItems, height) {
+	
+		let width = height + 2;
+		if (totalItems > (height * width)) {
+			return calcHeight(totalItems, height + 1);
+		} else {
+			return height;
+		}
+	}
+	
+	var html = '';
+	const header = '<!DOCTYPE html>\n<html>\n<head>\n<title>Setlist Cover Art</title>\n<style>\n  table {\n    border-collapse: collapse;\n    width: 40%;\n  }\n  th, td {\n    border: 1px solid black;\n    padding: 0px;\n    text-align: center;\n  }\n</style>\n</head>\n<body>\n\n<table>';
+
+	html = html + header;
+	const result = await chrome.storage.local.get(['coverArtList', 'setlist']);
+	if (result.coverArtList) {
+		document.getElementById('coverArtHtml').value = 'Hi!';
+		var setlist = result.setlist;
+		let setlistItems = setlist.split('\n');
+		var coverArtList = result.coverArtList;
+		let coverArtInfo = coverArtList.split('^');
+		let coverArtTotal = coverArtInfo.length;
+		var height = calcHeight(coverArtTotal, 1);
+		let width = height + 2;
+		for (let tableCellIndex = 0; tableCellIndex < ((Math.floor((coverArtTotal - 1) / width) + 1) * width); tableCellIndex++) {
+			if (tableCellIndex % width == 0) {
+				html = html + '\n    <tr>';
+			}
+			if (!(coverArtInfo[tableCellIndex] === undefined)) {
+				let imageName = 'coverArt' + tableCellIndex;
+				html = html + '\n      <td title="' + setlistItems[tableCellIndex] + '"><img id="' + imageName + '" name="' + imageName + '" src="' + coverArtInfo[tableCellIndex] + '" height=100 width=100></td>'; //+ setlistItems[tableCellIndex] + '</td>';
+			} else {
+				html = html + '\n      <td></td>';
+			}
+			if (Math.floor(tableCellIndex % width) == (width - 1)) {
+				html = html + '\n    </tr>';
+			}
+		}
+	}
+	html = html + '\n  </table>\n<html>';
+	document.getElementById('coverArtHtml').value = html;
 }
 
 function getReleaseData(trackCounter) {
@@ -72,6 +176,7 @@ function getReleaseData(trackCounter) {
 			this.year = getDiscogsYear();
 			this.trackName = getDiscogsTrackName(this.trackCounter, this.artist);
 			this.trackArtist = getDiscogsTrackArtist(this.trackCounter, this.artist);
+			this.coverArtURL = getDiscogsCoverArtURL();
 		}
 	}
 
@@ -145,7 +250,6 @@ function getReleaseData(trackCounter) {
 
 	function getDiscogsTrackArtist(trackCounter, artist) {
 
-		console.error('artist: ' + artist);
 		let trackTable = document.getElementsByClassName('tracklist_ZdQ0I')[0];
 		if (trackCounter > trackTable.rows.length) {
 			return '';
@@ -208,6 +312,12 @@ function getReleaseData(trackCounter) {
 		return releaseYear;
 	}
 
+	function getDiscogsCoverArtURL() {
+
+		let coverArtURL = document.querySelector("meta[property='og:image']").getAttribute("content");
+		return coverArtURL;
+	}
+
 	class ReleaseDataBandcamp {
 
 		constructor(url, trackCounter) {
@@ -219,6 +329,7 @@ function getReleaseData(trackCounter) {
 			this.year = getBandcampYear();
 			this.trackName = getBandcampTrackName(this.trackCounter, this.artist);
 			this.trackArtist = getBandcampTrackArtist(this.trackCounter, this.artist);
+			this.coverArtURL = getBandcampCoverArtURL();
 		}
 	}
 
@@ -299,6 +410,12 @@ function getReleaseData(trackCounter) {
 		return label;
 	}
 
+	function getBandcampCoverArtURL() {
+
+		let coverArtURL = document.querySelector("meta[property='og:image']").getAttribute("content");
+		return coverArtURL;
+	}
+
 	if ((window.location.hostname == 'www.discogs.com')&&(!window.location.pathname.includes('release'))) {
 		return 'Please select a release.';
 	}
@@ -311,13 +428,15 @@ function getReleaseData(trackCounter) {
 		var trackArtist = release.releaseObject.trackArtist;
 		var label = release.releaseObject.label;
 		var year = release.releaseObject.year;
+		var coverArtURL = release.releaseObject.coverArtURL;
 		if (trackName === '') {
 			return 'That track number does not exist on this release.';
 		}
 
-		let returnData = trackArtist + '\n' + trackName + '\n' + album + '\n' + label + '\n' + year;
+		let returnData = trackArtist + '\n' + trackName + '\n' + album + '\n' + label + '\n' + year + '\n' + coverArtURL;
 		return returnData;
 	}
+	
 }
 
 console.log('Extension is starting!');
@@ -328,7 +447,14 @@ chrome.storage.local.get('trackInfo', function(result) {
 		document.getElementById('trackInfo').value = trackInfo;
 	}
 });
-	
+
+chrome.storage.local.get('coverArt', function(result) {
+	var coverArt = result.coverArt;
+	if (coverArt !== undefined) {
+		document.getElementById('coverArt').src = coverArt;
+	}
+});
+
 chrome.storage.local.get('setlist', function(result) {
 	var setlist = result.setlist;
 	if (setlist !== undefined) {
@@ -340,4 +466,7 @@ document.getElementById('getTrackInfo').addEventListener('click', returnTrackInf
 document.getElementById('addToSetlist').addEventListener('click', addToSetlist);
 document.getElementById('clearSetlist').addEventListener('click', clearSetlist);
 document.getElementById('trackInfo').addEventListener('change', writeTrackInfoToStorage);
+document.getElementById('coverArt').addEventListener('change', writeCoverArtToStorage);
 document.getElementById('setlist').addEventListener('change', writePlaylistToStorage);
+document.getElementById('deleteLast').addEventListener('click', deleteLastEntry);
+document.getElementById('compileHtml').addEventListener('click', getCoverArtTable);
